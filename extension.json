@@ -1,0 +1,23 @@
+{
+	"name": "EventSimulator",
+	"author": [
+		"Tim Starling"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:EventSimulator",
+	"descriptionmsg": "eventsimulator-desc",
+	"license-name": "BSD-3-Clause",
+	"type": "other",
+	"requires": {
+		"MediaWiki": ">= 1.35.0"
+	},
+	"AutoloadNamespaces": {
+		"Wikimedia\\EventSimulator\\": "libs/EventSimulator",
+		"MediaWiki\\Extension\\EventSimulator\\": "src"
+	},
+	"MessagesDirs": {
+		"EventSimulator": [
+			"i18n"
+		]
+	},
+	"manifest_version": 2
+}
