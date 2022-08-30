@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaWiki\Extension\EventSimulator;
+namespace MediaWiki\Extension\EventSimulator\Model;
 
 use Wikimedia\EventSimulator\Counter;
 use Wikimedia\EventSimulator\Gauge;
