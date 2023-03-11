@@ -29,7 +29,7 @@ class RunEventSimulation extends \Maintenance {
 			'Run until average metrics are accurate to within this relative error. Default 1e-4.',
 			false, true );
 		$this->addOption( 'output-format',
-			'The output format. May be either csv or fixed (default fixed)',
+			'The output format. May be either csv or fixed (default csv)',
 			false, true );
 		$this->addOption( 'output-file', 'The output filename (default stdout)',
 			false, true, 'o' );
@@ -62,7 +62,7 @@ class RunEventSimulation extends \Maintenance {
 		}
 
 		$formatterOptions = [];
-		$formatterOptions['type'] = $this->getOption( 'output-format', 'fixed' );
+		$formatterOptions['type'] = $this->getOption( 'output-format', 'csv' );
 		$formatter = ResultFormatter::newFromSpec( $formatterOptions );
 
 		$runner = SimulationRunner::newFromSpec(
