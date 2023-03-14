@@ -7,6 +7,7 @@ use Wikimedia\EventSimulator\EventSimulatorException;
 use Wikimedia\EventSimulator\RandomDistribution;
 use Wikimedia\Rdbms\Database;
 use Wikimedia\Rdbms\QueryStatus;
+use Wikimedia\Rdbms\Replication\ReplicationReporter;
 
 /**
  * The fake/instrumented Database class
@@ -19,6 +20,11 @@ class MockDatabase extends Database {
 		MDFDeps $deps
 	) {
 		parent::__construct( $params );
+		$this->replicationReporter = new ReplicationReporter(
+			$params['topologyRole'],
+			$this->logger,
+			$params['srvCache']
+		);
 		$this->deps = $deps;
 	}
 
