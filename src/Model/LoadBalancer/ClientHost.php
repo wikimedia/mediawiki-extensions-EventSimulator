@@ -36,7 +36,8 @@ class ClientHost {
 			'servers' => $this->servers,
 			'srvCache' => $this->srvCache,
 			'wanCache' => $this->wanCache,
-			'databaseFactory' => new MockDatabaseFactory( $this->deps )
+			'databaseFactory' => new MockDatabaseFactory( $this->deps ),
+			'loadMonitor' => [ 'class' => \Wikimedia\Rdbms\LoadMonitor::class ]
 		] );
 	}
 }
