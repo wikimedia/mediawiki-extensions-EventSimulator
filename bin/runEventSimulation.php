@@ -23,10 +23,10 @@ class RunEventSimulation extends \Maintenance {
 			false, true );
 		$this->addOption( 'duration', 'The simulated duration, in seconds. Default: 1000.',
 			false, true );
-		$this->addOption( 'iterations', 'The number of iterations',
+		$this->addOption( 'iterations', 'The number of iterations. Default 1.',
 			false, true );
 		$this->addOption( 'convergence',
-			'Run until average metrics are accurate to within this relative error. Default 1e-4.',
+			'Run until average metrics are accurate to within this relative error.',
 			false, true );
 		$this->addOption( 'output-format',
 			'The output format. May be either csv or fixed (default csv)',
@@ -49,10 +49,10 @@ class RunEventSimulation extends \Maintenance {
 		$runnerOptions['model']['args'] = [ $params ];
 		$runnerOptions['timeStep'] = $this->getOption( 'time-step', 1 );
 		$runnerOptions['duration'] = $this->getOption( 'duration', 1000 );
-		if ( $this->hasOption( 'iterations' ) ) {
-			$runnerOptions['iterations'] = $this->getOption( 'iterations' );
+		if ( $this->hasOption( 'convergence' ) ) {
+			$runnerOptions['convergence'] = $this->getOption( 'convergence' );
 		} else {
-			$runnerOptions['convergence'] = $this->getOption( 'convergence', 1e-4 );
+			$runnerOptions['iterations'] = $this->getOption( 'iterations', 1 );
 		}
 
 		if ( $this->hasOption( 'output-file' ) ) {

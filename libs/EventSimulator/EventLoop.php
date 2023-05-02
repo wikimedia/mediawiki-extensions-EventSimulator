@@ -109,6 +109,14 @@ class EventLoop {
 	}
 
 	/**
+	 * Get a reference to the current time. It should be treated as read-only.
+	 * @return float|int
+	 */
+	public function &getCurrentTimeRef() {
+		return $this->now;
+	}
+
+	/**
 	 * Gracefully terminate the event loop.
 	 */
 	public function terminate() {

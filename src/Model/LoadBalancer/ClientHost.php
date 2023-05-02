@@ -3,6 +3,8 @@
 namespace MediaWiki\Extension\EventSimulator\Model\LoadBalancer;
 
 use Wikimedia\Rdbms\LoadBalancer;
+use Wikimedia\Rdbms\LoadMonitor;
+use Wikimedia\TestingAccessWrapper;
 
 class ClientHost {
 	private $srvCache;
@@ -32,12 +34,16 @@ class ClientHost {
 	}
 
 	public function getLoadBalancer() {
-		return new LoadBalancer( [
+		$lb = new LoadBalancer( [
 			'servers' => $this->servers,
 			'srvCache' => $this->srvCache,
 			'wanCache' => $this->wanCache,
 			'databaseFactory' => new MockDatabaseFactory( $this->deps ),
 			'loadMonitor' => [ 'class' => \Wikimedia\Rdbms\LoadMonitor::class ]
 		] );
+		/** @var LoadMonitor $loadMonitor */
+		$loadMonitor = TestingAccessWrapper::newFromObject( $lb )->getLoadMonitor();
+		$loadMonitor->setMockTime( $this->deps->getEventLoop()->getCurrentTimeRef() );
+		return $lb;
 	}
 }

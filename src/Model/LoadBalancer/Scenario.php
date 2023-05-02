@@ -18,6 +18,8 @@ abstract class Scenario {
 		switch ( $name ) {
 			case 'plain-s1':
 				return new PlainS1Scenario();
+			case 'connect-timeout':
+				return new ConnectTimeoutScenario();
 			default:
 				throw new EventSimulatorException( "unknown scenario \"$name\"" );
 		}
@@ -97,6 +99,17 @@ abstract class Scenario {
 	 */
 	public function getAvgLatency( $serverName ) {
 		return $this->serverData[$serverName]['latency'];
+	}
+
+	/**
+	 * Get the probability of a connection timeout
+	 *
+	 * @param string $serverName
+	 * @param float $time The current simulated time
+	 * @return float|int
+	 */
+	public function getConnectTimeoutProbability( $serverName, $time ) {
+		return 0;
 	}
 
 	/**

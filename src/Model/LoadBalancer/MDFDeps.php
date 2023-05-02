@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\EventSimulator\Model\LoadBalancer;
 
+use Wikimedia\EventSimulator\Counter;
 use Wikimedia\EventSimulator\EventLoop;
 use Wikimedia\EventSimulator\SharedVariable;
 
@@ -24,4 +25,22 @@ interface MDFDeps {
 	 * @return SharedVariable
 	 */
 	public function getActiveConnsMetric( $serverName ): SharedVariable;
+
+	/**
+	 * @param string $serverName
+	 * @return Counter
+	 */
+	public function getTotalConnsMetric( $serverName ): Counter;
+
+	/**
+	 * @param string $serverName
+	 * @return Counter
+	 */
+	public function getFailedConnsMetric( $serverName ): Counter;
+
+	/**
+	 * @param string $serverName
+	 * @return Counter
+	 */
+	public function getWorkCountMetric( $serverName ): Counter;
 }

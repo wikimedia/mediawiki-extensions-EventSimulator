@@ -18,8 +18,16 @@ class LBModel extends Model implements MDFDeps {
 	private $scenario;
 	/** @var Counter */
 	private $startCounter;
+
 	/** @var SharedVariable[] */
-	private $connCountsByServer;
+	private $activeConnsByServer;
+	/** @var Counter[] */
+	private $totalConnsByServer;
+	/** @var Counter[] */
+	private $failedConnsByServer;
+	/** @var Counter[] */
+	private $workCountsByServer;
+
 	/** @var ClientHost[] */
 	private $clients;
 	/** @var \HashBagOStuff */
@@ -40,8 +48,11 @@ class LBModel extends Model implements MDFDeps {
 		$this->startCounter = $this->result->getCounter( 'started' );
 
 		foreach ( $this->scenario->getServerNames() as $serverName ) {
-			$this->connCountsByServer[$serverName] = $this->result->getSharedVariable( "$serverName conns" );
-			$this->connCountsByServer[$serverName]->set( 0, 0 );
+			$this->activeConnsByServer[$serverName] = $this->result->getSharedVariable( "$serverName active conns" );
+			$this->activeConnsByServer[$serverName]->set( 0, 0 );
+			$this->totalConnsByServer[$serverName] = $this->result->getCounter( "$serverName total conns" );
+			$this->failedConnsByServer[$serverName] = $this->result->getCounter( "$serverName failed conns" );
+			$this->workCountsByServer[$serverName] = $this->result->getCounter( "$serverName work count" );
 		}
 
 		foreach ( $this->scenario->getClientNames() as $clientName ) {
@@ -59,9 +70,15 @@ class LBModel extends Model implements MDFDeps {
 			new MetricColumn( 'Requests', $result,
 				$this->startCounter->getName(), 'mean' ),
 		];
-		foreach ( $this->connCountsByServer as $serverName => $var ) {
-			$cols[] = new MetricColumn( "$serverName conns", $result,
-				$var->getName(), 'mean' );
+		foreach ( $this->scenario->getServerNames() as $serverName ) {
+			$cols[] = new MetricColumn( "$serverName active conns", $result,
+				$this->activeConnsByServer[$serverName]->getName(), 'mean' );
+			$cols[] = new MetricColumn( "$serverName total conns", $result,
+				$this->totalConnsByServer[$serverName]->getName(), 'mean' );
+			$cols[] = new MetricColumn( "$serverName failed conns", $result,
+				$this->failedConnsByServer[$serverName]->getName(), 'mean' );
+			$cols[] = new MetricColumn( "$serverName work count", $result,
+				$this->workCountsByServer[$serverName]->getName(), 'mean' );
 		}
 		return $cols;
 	}
@@ -111,11 +128,19 @@ class LBModel extends Model implements MDFDeps {
 		return $this->eventLoop;
 	}
 
-	/**
-	 * @param string $serverName
-	 * @return SharedVariable
-	 */
 	public function getActiveConnsMetric( $serverName ): SharedVariable {
-		return $this->connCountsByServer[$serverName];
+		return $this->activeConnsByServer[$serverName];
+	}
+
+	public function getTotalConnsMetric( $serverName ): Counter {
+		return $this->totalConnsByServer[$serverName];
+	}
+
+	public function getFailedConnsMetric( $serverName ): Counter {
+		return $this->failedConnsByServer[$serverName];
+	}
+
+	public function getWorkCountMetric( $serverName ): Counter {
+		return $this->workCountsByServer[$serverName];
 	}
 }

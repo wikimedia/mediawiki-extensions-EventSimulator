@@ -14,12 +14,19 @@ class MockDatabaseFactory extends DatabaseFactory {
 	public function __construct(
 		MDFDeps $deps
 	) {
+		parent::__construct();
 		$this->deps = $deps;
 	}
 
 	public function create( $type, $params = [], $connect = Database::NEW_CONNECTED ) {
 		return new MockDatabase(
-			$params,
+			$params + [
+				'cliMode' => false,
+				'agent' => '',
+				'profiler' => null,
+				'deprecationLogger' => static function () {
+				}
+			],
 			$this->deps
 		);
 	}

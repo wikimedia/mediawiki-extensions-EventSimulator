@@ -6,6 +6,7 @@ use stdClass;
 use Wikimedia\EventSimulator\EventSimulatorException;
 use Wikimedia\EventSimulator\RandomDistribution;
 use Wikimedia\Rdbms\Database;
+use Wikimedia\Rdbms\DBConnectionError;
 use Wikimedia\Rdbms\QueryStatus;
 use Wikimedia\Rdbms\Replication\ReplicationReporter;
 
@@ -29,12 +30,13 @@ class MockDatabase extends Database {
 	}
 
 	protected function doSingleStatementQuery( string $sql ): QueryStatus {
-		if ( $sql === 'SELECT do_work()' ) {
+		if ( preg_match( '/SELECT.*do_work/', $sql ) ) {
 			$avgLatency = $this->deps->getScenario()->getAvgLatency( $this->getServerName() );
 			$latencyFuzz = $avgLatency * 0.1;
 			$minLatency = $avgLatency - $latencyFuzz;
 			$maxLatency = $avgLatency + $latencyFuzz;
 			$latency = RandomDistribution::uniform( $minLatency, $maxLatency );
+			$this->deps->getWorkCountMetric( $this->getServerName() )->incr();
 			$this->deps->getEventLoop()->sleep( $latency );
 		}
 
@@ -46,15 +48,37 @@ class MockDatabase extends Database {
 		);
 	}
 
-	private function incrConnsMetric( $value ) {
-		$metric = $this->deps->getActiveConnsMetric( $this->getServerName() );
+	private function incrConnMetrics( $type ) {
+		$active = $this->deps->getActiveConnsMetric( $this->getServerName() );
+		$total = $this->deps->getTotalConnsMetric( $this->getServerName() );
+		$failed = $this->deps->getFailedConnsMetric( $this->getServerName() );
 		$now = $this->deps->getEventLoop()->getCurrentTime();
-		$metric->incr( $value, $now );
+
+		if ( $type === 'connect' ) {
+			$active->incr( 1, $now );
+			$total->incr();
+		} elseif ( $type === 'disconnect' ) {
+			$active->incr( -1, $now );
+		} elseif ( $type === 'fail' ) {
+			$total->incr();
+			$failed->incr();
+		}
 	}
 
 	protected function open( $server, $user, $password, $db, $schema, $tablePrefix ) {
-		$this->conn = new stdClass;
-		$this->incrConnsMetric( 1 );
+		$eventLoop = $this->deps->getEventLoop();
+		$p = $this->deps->getScenario()->getConnectTimeoutProbability(
+			$this->getServerName(),
+			$eventLoop->getCurrentTime()
+		);
+		if ( RandomDistribution::uniform( 0, 1 ) >= $p ) {
+			$this->incrConnMetrics( 'connect' );
+			$this->conn = new stdClass;
+		} else {
+			$eventLoop->sleep( $this->connectTimeout ?: 3 );
+			$this->incrConnMetrics( 'fail' );
+			throw new DBConnectionError( $this, 'connection timeout' );
+		}
 	}
 
 	public function indexInfo( $table, $index, $fname = __METHOD__ ) {
@@ -67,7 +91,7 @@ class MockDatabase extends Database {
 
 	protected function closeConnection() {
 		if ( $this->conn ) {
-			$this->incrConnsMetric( -1 );
+			$this->incrConnMetrics( 'disconnect' );
 			$this->conn = null;
 		}
 		return true;
