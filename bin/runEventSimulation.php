@@ -21,7 +21,7 @@ class RunEventSimulation extends \Maintenance {
 			false, true, 'p', true );
 		$this->addOption( 'time-step', 'The output time step, in seconds. Default: 1.',
 			false, true );
-		$this->addOption( 'duration', 'The simulated duration, in seconds. Default: 1000.',
+		$this->addOption( 'duration', 'The simulated duration, in seconds. Default: 20.',
 			false, true );
 		$this->addOption( 'iterations', 'The number of iterations. Default 1.',
 			false, true );
@@ -48,7 +48,7 @@ class RunEventSimulation extends \Maintenance {
 		}
 		$runnerOptions['model']['args'] = [ $params ];
 		$runnerOptions['timeStep'] = $this->getOption( 'time-step', 1 );
-		$runnerOptions['duration'] = $this->getOption( 'duration', 1000 );
+		$runnerOptions['duration'] = $this->getOption( 'duration', 20 );
 		if ( $this->hasOption( 'convergence' ) ) {
 			$runnerOptions['convergence'] = $this->getOption( 'convergence' );
 		} else {

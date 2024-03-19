@@ -7,6 +7,7 @@ use Wikimedia\EventSimulator\EventSimulatorException;
 use Wikimedia\EventSimulator\RandomDistribution;
 use Wikimedia\Rdbms\Database;
 use Wikimedia\Rdbms\DBConnectionError;
+use Wikimedia\Rdbms\FakeResultWrapper;
 use Wikimedia\Rdbms\QueryStatus;
 use Wikimedia\Rdbms\Replication\ReplicationReporter;
 
@@ -41,7 +42,7 @@ class MockDatabase extends Database {
 		}
 
 		return new QueryStatus(
-			new \FakeResultWrapper( [] ),
+			new FakeResultWrapper( [] ),
 			0,
 			'',
 			0
@@ -75,7 +76,9 @@ class MockDatabase extends Database {
 			$this->incrConnMetrics( 'connect' );
 			$this->conn = new stdClass;
 		} else {
+			$this->incrConnMetrics( 'connect' );
 			$eventLoop->sleep( $this->connectTimeout ?: 3 );
+			$this->incrConnMetrics( 'disconnect' );
 			$this->incrConnMetrics( 'fail' );
 			throw new DBConnectionError( $this, 'connection timeout' );
 		}
@@ -131,5 +134,9 @@ class MockDatabase extends Database {
 
 	public function fieldInfo( $table, $field ) {
 		throw new EventSimulatorException( 'not implemented' );
+	}
+
+	protected function lastInsertId() {
+		return 0;
 	}
 }
