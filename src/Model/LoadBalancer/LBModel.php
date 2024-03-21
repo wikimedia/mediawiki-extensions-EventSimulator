@@ -27,6 +27,8 @@ class LBModel extends Model implements MDFDeps {
 	private $failedConnsByServer;
 	/** @var Counter[] */
 	private $workCountsByServer;
+	/** @var SharedVariable */
+	private $workers;
 
 	/** @var ClientHost[] */
 	private $clients;
@@ -46,6 +48,7 @@ class LBModel extends Model implements MDFDeps {
 	public function setup() {
 		$this->eventLoop->addTask( [ $this, 'makeRequests' ] );
 		$this->startCounter = $this->result->getCounter( 'started' );
+		$this->workers = $this->result->getSharedVariable( 'workers' );
 
 		foreach ( $this->scenario->getServerNames() as $serverName ) {
 			$this->activeConnsByServer[$serverName] = $this->result->getSharedVariable( "$serverName active conns" );
@@ -69,6 +72,8 @@ class LBModel extends Model implements MDFDeps {
 			new TimeColumn( $this->runOptions ),
 			new MetricColumn( 'Requests', $result,
 				$this->startCounter->getName(), 'mean' ),
+			new MetricColumn( 'Active workers', $result,
+				$this->workers->getName(), 'mean' ),
 		];
 		foreach ( $this->scenario->getServerNames() as $serverName ) {
 			$cols[] = new MetricColumn( "$serverName active conns", $result,
@@ -99,10 +104,12 @@ class LBModel extends Model implements MDFDeps {
 	 * Fiber function: perform a request
 	 */
 	public function handleRequest() {
+		$this->workers->incr( 1, $this->eventLoop->getCurrentTime() );
 		$client = $this->getRandomClient();
 		$usePrimary = RandomDistribution::uniform( 0, 1 ) <= $this->scenario->getPrimaryRatio();
 		$db = $client->getLoadBalancer()->getConnectionRef( $usePrimary ? DB_PRIMARY : DB_REPLICA );
 		$db->query( 'SELECT do_work()' );
+		$this->workers->incr( -1, $this->eventLoop->getCurrentTime() );
 	}
 
 	/**

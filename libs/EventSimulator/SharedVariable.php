@@ -105,28 +105,32 @@ class SharedVariable extends Metric {
 	/**
 	 * Increment the variable
 	 *
-	 * @param float|int $value The amount to add
+	 * @param float|int $delta The amount to add
 	 * @param float|int $time The current time in seconds
 	 */
-	public function incr( $value, $time ) {
-		$this->set( $this->value + $value, $time );
+	public function incr( $delta, $time ) {
+		$this->set( $this->value + $delta, $time );
 	}
 
 	/**
 	 * Increment the variable, and decrement it when the ScopedCallback is consumed.
 	 *
 	 * @param EventLoop $eventLoop
-	 * @param float|int $value
+	 * @param float|int $delta
 	 * @return ScopedCallback
 	 */
-	public function scopedIncr( EventLoop $eventLoop, $value = 1 ) {
-		$this->incr( $value, $eventLoop->getCurrentTime() );
-		return new ScopedCallback( function () use ( $value, $eventLoop ) {
-			$this->incr( -$value, $eventLoop->getCurrentTime() );
+	public function scopedIncr( EventLoop $eventLoop, $delta = 1 ) {
+		$this->incr( $delta, $eventLoop->getCurrentTime() );
+		return new ScopedCallback( function () use ( $delta, $eventLoop ) {
+			$this->incr( -$delta, $eventLoop->getCurrentTime() );
 		} );
 	}
 
 	public function reset() {
 		$this->value = null;
+		$this->integralStartTime = 0;
+		$this->integralValueDt = 0;
+		$this->min = null;
+		$this->max = null;
 	}
 }

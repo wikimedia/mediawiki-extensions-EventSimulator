@@ -16,11 +16,16 @@ use SplObjectStorage;
  * handler.
  */
 class EventLoop {
+	public const TIME_OFFSET = 1_000_000_000;
+
 	/** @var \SplPriorityQueue */
 	private $queue;
 
 	/** @var int|float */
 	private $now = 0;
+
+	/** @var int|float */
+	private $offsetNow = self::TIME_OFFSET;
 
 	/** @var SplObjectStorage */
 	private $fibers;
@@ -31,11 +36,34 @@ class EventLoop {
 	/** @var bool */
 	private $isTerminating = false;
 
+	/** @var int */
+	private $tickCount = 0;
+
+	/** @var callable|null */
+	private $progressCallback;
+
+	/** @var int|null */
+	private $progressPeriod;
+
 	public function __construct() {
 		$this->queue = new \SplPriorityQueue();
 		$this->queue->setExtractFlags( \SplPriorityQueue::EXTR_BOTH );
 		$this->fibers = new SplObjectStorage;
 		$this->startArgs = new SplObjectStorage;
+	}
+
+	/**
+	 * Register a function to be called every N ticks
+	 *
+	 * @param callable $callback The function to be called:
+	 *   function ( $time, $fibers ) where $time is the current simulation time
+	 *   and $fibers is the current active fiber count.
+	 * @param int $period
+	 * @return void
+	 */
+	public function setProgressCallback( $callback, $period = 1000 ) {
+		$this->progressCallback = $callback;
+		$this->progressPeriod = $period;
 	}
 
 	/**
@@ -68,10 +96,15 @@ class EventLoop {
 		} while ( $fiber->isTerminated() );
 
 		$this->now = -$priority;
+		$this->offsetNow = $this->now + self::TIME_OFFSET;
 
 		try {
 			$fiber->resume();
 		} catch ( TerminateException $e ) {
+		}
+
+		if ( $this->progressCallback && $this->tickCount++ % $this->progressPeriod === 0 ) {
+			( $this->progressCallback )( $this->now, $this->fibers->count() );
 		}
 
 		return true;
@@ -114,6 +147,16 @@ class EventLoop {
 	 */
 	public function &getCurrentTimeRef() {
 		return $this->now;
+	}
+
+	/**
+	 * Get a reference to the current time, offset sufficiently so that
+	 * MediumSpecificBagOStuff::isRelativeExpiration() does not see it as a
+	 * relative expiration.
+	 * @return float|int
+	 */
+	public function &getOffsetTimeRef() {
+		return $this->offsetNow;
 	}
 
 	/**

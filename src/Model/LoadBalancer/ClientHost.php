@@ -17,7 +17,9 @@ class ClientHost {
 		MDFDeps $deps
 	) {
 		$this->srvCache = new \HashBagOStuff;
+		$this->srvCache->setMockTime( $deps->getEventLoop()->getOffsetTimeRef() );
 		$this->wanCache = new \WANObjectCache( [ 'cache' => $sharedCache ] );
+		$this->wanCache->setMockTime( $deps->getEventLoop()->getOffsetTimeRef() );
 
 		$this->servers = [];
 		foreach ( $deps->getScenario()->getLoads() as $name => $load ) {
@@ -40,7 +42,7 @@ class ClientHost {
 			'databaseFactory' => new MockDatabaseFactory( $this->deps ),
 			'loadMonitor' => [ 'class' => LoadMonitor::class ]
 		] );
-		$lb->setMockTime( $this->deps->getEventLoop()->getCurrentTimeRef() );
+		$lb->setMockTime( $this->deps->getEventLoop()->getOffsetTimeRef() );
 		return $lb;
 	}
 }

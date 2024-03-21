@@ -20,6 +20,8 @@ class SimulationRunner {
 	private $iterations;
 	/** @var float|null */
 	private $convergence;
+	/** @var callable|null */
+	private $progressCallback;
 
 	/**
 	 * Factory
@@ -40,7 +42,8 @@ class SimulationRunner {
 			$options['timeStep'],
 			$options['duration'],
 			$options['iterations'] ?? null,
-			$options['convergence'] ?? null
+			$options['convergence'] ?? null,
+			$options['progressCallback'] ?? null
 		);
 	}
 
@@ -51,14 +54,18 @@ class SimulationRunner {
 	 * @param float|int $duration
 	 * @param int|null $iterations
 	 * @param float|null $convergence
+	 * @param callable|null $progressCallback
 	 */
-	public function __construct( $objectFactory, $modelSpec, $timeStep, $duration, $iterations, $convergence ) {
+	public function __construct( $objectFactory, $modelSpec, $timeStep, $duration,
+		$iterations, $convergence, $progressCallback
+	) {
 		$this->objectFactory = $objectFactory;
 		$this->modelSpec = $modelSpec;
 		$this->timeStep = $timeStep;
 		$this->duration = $duration;
 		$this->iterations = $iterations;
 		$this->convergence = $convergence;
+		$this->progressCallback = $progressCallback;
 	}
 
 	/**
@@ -76,6 +83,13 @@ class SimulationRunner {
 				throw new EventSimulatorException( "invalid model" );
 			}
 			$eventLoop = new EventLoop;
+			if ( $this->progressCallback ) {
+				$eventLoop->setProgressCallback(
+					function ( $time, $fibers ) use ( $iterationsDone ) {
+						( $this->progressCallback )( $iterationsDone, $time, $fibers );
+					}
+				);
+			}
 			$result->startRun( $eventLoop );
 			$model->injectDeps( $eventLoop, $result, $runOptions );
 			$model->execute();

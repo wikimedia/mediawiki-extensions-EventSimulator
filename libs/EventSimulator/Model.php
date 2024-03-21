@@ -50,6 +50,9 @@ abstract class Model {
 		$this->eventLoop->addTask( [ $this, 'terminate' ] );
 		$this->setup();
 		$this->eventLoop->run();
+		// Forcing GC now helps to avoid random destructor calls during the
+		// subsequent run, which can corrupt the metrics.
+		gc_collect_cycles();
 	}
 
 	/**
@@ -66,7 +69,11 @@ abstract class Model {
 	 * Fiber function: wait until the termination time and then stop the event loop.
 	 */
 	public function terminate() {
-		$this->eventLoop->sleep( $this->runOptions->duration );
+		$this->eventLoop->sleep(
+			$this->runOptions->duration
+			// Add a small fudge factor to wait for the final report
+			* 1.0001
+		);
 		$this->eventLoop->terminate();
 	}
 }

@@ -31,18 +31,24 @@ class MockDatabase extends Database {
 	}
 
 	protected function doSingleStatementQuery( string $sql ): QueryStatus {
+		$rows = [];
 		if ( preg_match( '/SELECT.*do_work/', $sql ) ) {
-			$avgLatency = $this->deps->getScenario()->getAvgLatency( $this->getServerName() );
+			$avgLatency = $this->deps->getScenario()->getAvgLatency(
+				$this->getServerName(), $this->deps->getEventLoop()->getCurrentTime() );
 			$latencyFuzz = $avgLatency * 0.1;
 			$minLatency = $avgLatency - $latencyFuzz;
 			$maxLatency = $avgLatency + $latencyFuzz;
 			$latency = RandomDistribution::uniform( $minLatency, $maxLatency );
 			$this->deps->getWorkCountMetric( $this->getServerName() )->incr();
 			$this->deps->getEventLoop()->sleep( $latency );
+		} elseif ( preg_match( '/SELECT.*pcount.*FROM INFORMATION_SCHEMA\.PROCESSLIST/', $sql ) ) {
+			$row = new stdClass();
+			$row->pcount = $this->deps->getActiveConnsMetric( $this->getServerName() )->get();
+			$rows[] = $row;
 		}
 
 		return new QueryStatus(
-			new FakeResultWrapper( [] ),
+			new FakeResultWrapper( $rows ),
 			0,
 			'',
 			0
@@ -61,7 +67,6 @@ class MockDatabase extends Database {
 		} elseif ( $type === 'disconnect' ) {
 			$active->incr( -1, $now );
 		} elseif ( $type === 'fail' ) {
-			$total->incr();
 			$failed->incr();
 		}
 	}

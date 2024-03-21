@@ -33,6 +33,7 @@ class RunEventSimulation extends \Maintenance {
 			false, true );
 		$this->addOption( 'output-file', 'The output filename (default stdout)',
 			false, true, 'o' );
+		$this->addOption( 'progress', 'Report progress to stderr' );
 	}
 
 	public function execute() {
@@ -53,6 +54,28 @@ class RunEventSimulation extends \Maintenance {
 			$runnerOptions['convergence'] = $this->getOption( 'convergence' );
 		} else {
 			$runnerOptions['iterations'] = $this->getOption( 'iterations', 1 );
+		}
+		if ( $this->hasOption( 'progress' ) ) {
+			$runnerOptions['progressCallback'] = function ( $iteration, $simulationTime, $fiberCount )
+			use ( $runnerOptions ) {
+				static $lastReportTime;
+				$now = microtime( true );
+				if ( $lastReportTime === null ) {
+					$lastReportTime = $now;
+					return;
+				}
+				if ( $now - $lastReportTime < 1 ) {
+					return;
+				}
+				$lastReportTime = $now;
+				$percentDone = ( $simulationTime / $runnerOptions['duration'] / $runnerOptions['iterations']
+					+ $iteration / $runnerOptions['iterations'] ) * 100;
+				$mem = getrusage()['ru_maxrss'] / 1024;
+				fwrite(
+					STDERR,
+					sprintf( "%8.1f%% %8d fibers %8d MiB\r", $percentDone, $fiberCount, $mem )
+				);
+			};
 		}
 
 		if ( $this->hasOption( 'output-file' ) ) {

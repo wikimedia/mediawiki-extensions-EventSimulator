@@ -20,6 +20,10 @@ abstract class Scenario {
 				return new PlainS1Scenario();
 			case 'connect-timeout':
 				return new ConnectTimeoutScenario();
+			case 'quiet':
+				return new QuietScenario();
+			case 'slow':
+				return new SlowScenario();
 			default:
 				throw new EventSimulatorException( "unknown scenario \"$name\"" );
 		}
@@ -44,7 +48,10 @@ abstract class Scenario {
 		foreach ( $this->getLoads() as $server => $load ) {
 			$serverData[$server] = $connData[$server];
 			$serverData[$server]['load'] = $load;
-			$totalConnRate += $serverData[$server]['connRate'];
+		}
+		$this->adjustServerData( $serverData );
+		foreach ( $serverData as $server => $data ) {
+			$totalConnRate += $data['connRate'];
 		}
 		$this->serverData = $serverData;
 		$this->requestRate = $totalConnRate;
@@ -95,9 +102,10 @@ abstract class Scenario {
 	 * Get the average latency for work done on a given server
 	 *
 	 * @param string $serverName
+	 * @param float $time The current simulated time
 	 * @return float|int
 	 */
-	public function getAvgLatency( $serverName ) {
+	public function getAvgLatency( $serverName, $time ) {
 		return $this->serverData[$serverName]['latency'];
 	}
 
@@ -132,4 +140,11 @@ abstract class Scenario {
 	 * @return int
 	 */
 	abstract protected function getClientCount();
+
+	/**
+	 * Adjust the parsed server data
+	 * @param array &$serverData
+	 */
+	protected function adjustServerData( &$serverData ) {
+	}
 }
