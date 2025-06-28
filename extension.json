@@ -11,8 +11,8 @@
 		"MediaWiki": ">= 1.35.0"
 	},
 	"AutoloadNamespaces": {
-		"Wikimedia\\EventSimulator\\": "libs/EventSimulator",
-		"MediaWiki\\Extension\\EventSimulator\\": "src"
+		"Wikimedia\\EventSimulator\\": "libs/EventSimulator/",
+		"MediaWiki\\Extension\\EventSimulator\\": "src/"
 	},
 	"MessagesDirs": {
 		"EventSimulator": [
