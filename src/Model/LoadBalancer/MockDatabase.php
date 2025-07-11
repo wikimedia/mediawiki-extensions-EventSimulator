@@ -89,6 +89,10 @@ class MockDatabase extends Database {
 		}
 	}
 
+	/**
+	 * @inheritDoc
+	 * @throws EventSimulatorException
+	 */
 	public function indexInfo( $table, $index, $fname = __METHOD__ ) {
 		throw new EventSimulatorException( 'not implemented' );
 	}
@@ -137,6 +141,10 @@ class MockDatabase extends Database {
 		return '';
 	}
 
+	/**
+	 * @inheritDoc
+	 * @throws EventSimulatorException
+	 */
 	public function fieldInfo( $table, $field ) {
 		throw new EventSimulatorException( 'not implemented' );
 	}

@@ -100,7 +100,7 @@ class EventLoop {
 
 		try {
 			$fiber->resume();
-		} catch ( TerminateException $e ) {
+		} catch ( TerminateException ) {
 		}
 
 		if ( $this->progressCallback && $this->tickCount++ % $this->progressPeriod === 0 ) {
@@ -191,7 +191,7 @@ class EventLoop {
 			if ( $fiber->isSuspended() ) {
 				try {
 					$fiber->throw( new TerminateException );
-				} catch ( TerminateException $e ) {
+				} catch ( TerminateException ) {
 				}
 			}
 		}

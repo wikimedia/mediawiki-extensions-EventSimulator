@@ -39,6 +39,12 @@ class SimulationResult {
 		}
 	}
 
+	/**
+	 * @param string $name
+	 * @param class-string $className
+	 * @return Metric
+	 * @throws EventSimulatorException
+	 */
 	private function getMetric( $name, $className ): Metric {
 		if ( !isset( $this->metrics[$name] ) ) {
 			$metric = $this->metrics[$name] = new $className( $name );

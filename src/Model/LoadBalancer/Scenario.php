@@ -13,6 +13,7 @@ abstract class Scenario {
 	 *
 	 * @param string $name
 	 * @return Scenario
+	 * @throws EventSimulatorException
 	 */
 	public static function create( $name ) {
 		switch ( $name ) {

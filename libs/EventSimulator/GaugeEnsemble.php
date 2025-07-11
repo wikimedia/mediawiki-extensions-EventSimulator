@@ -76,6 +76,7 @@ class GaugeEnsemble extends MetricEnsemble {
 	/**
 	 * @param string $statName
 	 * @return RunningStat
+	 * @throws EventSimulatorException
 	 */
 	private function getStatByName( $statName ) {
 		switch ( strtolower( $statName ) ) {

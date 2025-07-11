@@ -72,6 +72,7 @@ class SimulationRunner {
 	 * Run the simulation multiple times until iterations or convergence is reached
 	 *
 	 * @return SimulationResult
+	 * @throws EventSimulatorException
 	 */
 	public function run() {
 		$runOptions = new RunOptions( $this->timeStep, $this->duration );
