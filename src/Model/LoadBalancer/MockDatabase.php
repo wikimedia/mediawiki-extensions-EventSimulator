@@ -93,6 +93,14 @@ class MockDatabase extends Database {
 	 * @inheritDoc
 	 * @throws EventSimulatorException
 	 */
+	public function getPrimaryKeyColumns( $table, $fname = __METHOD__ ) {
+		throw new EventSimulatorException( 'not implemented' );
+	}
+
+	/**
+	 * @inheritDoc
+	 * @throws EventSimulatorException
+	 */
 	public function indexInfo( $table, $index, $fname = __METHOD__ ) {
 		throw new EventSimulatorException( 'not implemented' );
 	}

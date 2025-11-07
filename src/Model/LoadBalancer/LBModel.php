@@ -107,8 +107,8 @@ class LBModel extends Model implements MDFDeps {
 		$this->workers->incr( 1, $this->eventLoop->getCurrentTime() );
 		$client = $this->getRandomClient();
 		$usePrimary = RandomDistribution::uniform( 0, 1 ) <= $this->scenario->getPrimaryRatio();
-		$db = $client->getLoadBalancer()->getConnectionRef( $usePrimary ? DB_PRIMARY : DB_REPLICA );
-		$db->query( 'SELECT do_work()' );
+		$db = $client->getLoadBalancer()->getConnection( $usePrimary ? DB_PRIMARY : DB_REPLICA );
+		$db->query( 'SELECT do_work()', __METHOD__ );
 		$this->workers->incr( -1, $this->eventLoop->getCurrentTime() );
 	}
 
